@@ -5,6 +5,20 @@ Production-ready Azure architecture for multi-organization confidential computin
 ## Repository Layout
 
 ```
+docs/
+  README.md
+  architecture.md
+  threat-model.md
+docker-compose.yml
+src/
+  Application/
+  Domain/
+  Infrastructure/
+  Portal.Api/
+  Portal.Web/
+  Workers/
+tests/
+  Portal.Tests/
 infra/
   main.bicep
   modules/

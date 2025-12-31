@@ -1,0 +1,137 @@
+@using System.Text.Json
+@model Portal.Web.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Portal";
+}
+<div class="row g-4">
+    <div class="col-xl-4">
+        <div class="portal-card bg-white p-4">
+            <h4 class="fw-bold">Create Organization</h4>
+            <form method="post" action="/Admin/CreateOrganization">
+                <div class="mb-3">
+                    <label class="form-label">Organization name</label>
+                    <input name="name" class="form-control" placeholder="Contoso Health" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tenant slug</label>
+                    <input name="tenantSlug" class="form-control" placeholder="contoso" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Azure subscription</label>
+                    <input name="subscriptionId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Region</label>
+                    <input name="region" class="form-control" placeholder="eastus" />
+                </div>
+                <button class="btn btn-primary w-100">Create org</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-xl-8">
+        <div class="portal-card bg-white p-4">
+            <h4 class="fw-bold">Organizations</h4>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Tenant</th>
+                            <th>Region</th>
+                            <th>Deployment</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var org in Model.Organizations)
+                        {
+                            var deployment = Model.Deployments.FirstOrDefault(d => d.OrgId == org.Id);
+                            <tr>
+                                <td>@org.Name</td>
+                                <td>@org.TenantSlug</td>
+                                <td>@org.Region</td>
+                                <td>
+                                    <span class="status-pill bg-success text-white">@deployment?.Status</span>
+                                </td>
+                                <td>
+                                    <form method="post" action="/Admin/Deploy">
+                                        <input type="hidden" name="orgId" value="@org.Id" />
+                                        <button class="btn btn-outline-primary btn-sm">Deploy</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="portal-card bg-white p-4">
+            <h4 class="fw-bold">Cross-org sharing policies</h4>
+            <p class="text-muted">Define explicit org sharing and purpose tags.</p>
+            @foreach (var policy in Model.Policies)
+            {
+                var org = Model.Organizations.FirstOrDefault(o => o.Id == policy.OrgId);
+                var allowedOrgs = JsonSerializer.Deserialize<List<Guid>>(policy.AllowedOrgIdsJson) ?? new List<Guid>();
+                var purposeTags = JsonSerializer.Deserialize<List<string>>(policy.PurposeTagsJson) ?? new List<string>();
+                <form method="post" action="/Admin/UpdatePolicy" class="border rounded p-3 mb-3">
+                    <input type="hidden" name="OrgId" value="@policy.OrgId" />
+                    <div class="mb-2 fw-bold">@org?.Name</div>
+                    <div class="mb-3">
+                        <label class="form-label">Sharing mode</label>
+                        <input name="CrossOrgSharingMode" class="form-control" value="@policy.CrossOrgSharingMode" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Allowed org IDs (CSV)</label>
+                        <input name="AllowedOrgIdsCsv" class="form-control" value="@string.Join(',', allowedOrgs)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Purpose tags (CSV)</label>
+                        <input name="PurposeTagsCsv" class="form-control" value="@string.Join(',', purposeTags)" />
+                    </div>
+                    <button class="btn btn-outline-dark btn-sm">Save policy</button>
+                </form>
+            }
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="portal-card bg-white p-4">
+            <h4 class="fw-bold">Secrets & keys (mocked)</h4>
+            <p class="text-muted">Keys are encrypted at rest; raw values never shown.</p>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Master Key</span>
+                    <span class="badge bg-secondary">Masked</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Org Data Encryption Keys</span>
+                    <span class="badge bg-secondary">Encrypted</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Attestation Status</span>
+                    <span class="badge bg-success">Required</span>
+                </li>
+            </ul>
+            <div class="mt-4">
+                <h5 class="fw-bold">Federated Learning</h5>
+                <p class="text-muted">Aggregate ranker weights across tenants.</p>
+                <form method="post" action="/Admin/RunFederatedLearning">
+                    <button class="btn btn-primary">Run aggregation</button>
+                </form>
+                <ul class="list-group mt-3">
+                    @foreach (var version in Model.ModelVersions)
+                    {
+                        <li class="list-group-item">
+                            <div class="fw-bold">@version.Id</div>
+                            <div class="text-muted">@version.CreatedAt</div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

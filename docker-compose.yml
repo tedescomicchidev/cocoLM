@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  portal-web:
+    build:
+      context: src
+      dockerfile: Portal.Web/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Confidential__MasterKey=N+hkMZYpI6TcPxTv9djDHrY9EFDOsOXNB2kUjXrtWfE=
+    volumes:
+      - portal-data:/data
+  portal-api:
+    build:
+      context: src
+      dockerfile: Portal.Api/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Confidential__MasterKey=N+hkMZYpI6TcPxTv9djDHrY9EFDOsOXNB2kUjXrtWfE=
+    volumes:
+      - portal-data:/data
+  portal-workers:
+    build:
+      context: src
+      dockerfile: Workers/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Confidential__MasterKey=N+hkMZYpI6TcPxTv9djDHrY9EFDOsOXNB2kUjXrtWfE=
+    volumes:
+      - portal-data:/data
+
+volumes:
+  portal-data:

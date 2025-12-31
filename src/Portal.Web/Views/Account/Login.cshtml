@@ -1,0 +1,22 @@
+@model Portal.Web.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="portal-card bg-white p-4">
+            <h3 class="fw-bold">Sign in</h3>
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input asp-for="Password" class="form-control" type="password" />
+                </div>
+                <button class="btn btn-primary w-100" type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+</div>

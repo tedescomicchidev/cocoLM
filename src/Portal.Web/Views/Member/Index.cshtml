@@ -1,0 +1,115 @@
+@using System.Text.Json
+@model Portal.Web.Models.MemberPortalViewModel
+@{
+    ViewData["Title"] = "Member Portal";
+    var citationsJson = TempData["Citations"] as string;
+    var citations = string.IsNullOrWhiteSpace(citationsJson)
+        ? new List<Portal.Application.Citation>()
+        : JsonSerializer.Deserialize<List<Portal.Application.Citation>>(citationsJson) ?? new List<Portal.Application.Citation>();
+}
+<div class="row g-4">
+    <div class="col-lg-3">
+        <div class="sidebar">
+            <h5 class="fw-bold">@Model.OrgName</h5>
+            <p class="text-muted">Conversations</p>
+            <ul class="list-group">
+                @foreach (var convo in Model.Conversations)
+                {
+                    <li class="list-group-item">
+                        <a class="text-decoration-none" href="/Member?conversationId=@convo.Id">@convo.Title</a>
+                    </li>
+                }
+            </ul>
+            <hr />
+            <h6 class="fw-bold">Recent audits</h6>
+            <ul class="list-group">
+                @foreach (var audit in Model.Audits)
+                {
+                    <li class="list-group-item">
+                        <div class="fw-bold">@audit.Query</div>
+                        <div class="text-muted small">@audit.Scope - @audit.Timestamp</div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chat-panel">
+            <h4 class="fw-bold">RAG Chat</h4>
+            <div class="mb-3">
+                @foreach (var message in Model.Messages)
+                {
+                    <div class="mb-2">
+                        <span class="badge bg-@(message.Role == "user" ? "primary" : "secondary")">@message.Role</span>
+                        <span class="ms-2">@message.Content</span>
+                    </div>
+                }
+                @if (TempData["LastAnswer"] is string answer)
+                {
+                    <div class="alert alert-success">@answer</div>
+                }
+            </div>
+            <form method="post" action="/Member/Chat">
+                <input type="hidden" name="OrgId" value="@Model.OrgId" />
+                <input type="hidden" name="ConversationId" value="@Model.CurrentConversationId" />
+                <div class="mb-2">
+                    <label class="form-label">Purpose tag</label>
+                    <select class="form-select" name="PurposeTag">
+                        <option value="Research">Research</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Compliance">Compliance</option>
+                    </select>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" name="IncludeShared" value="true" />
+                    <label class="form-check-label">Include shared orgs</label>
+                </div>
+                <div class="mb-3">
+                    <textarea name="Query" class="form-control" rows="3" placeholder="Ask about your documents..."></textarea>
+                </div>
+                <button class="btn btn-primary">Send</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="portal-card bg-white p-4 mb-3">
+            <h5 class="fw-bold">Citations</h5>
+            <div class="citation-list">
+                @foreach (var citation in citations)
+                {
+                    <div class="border rounded p-2 mb-2">
+                        <div class="fw-bold">@citation.DocumentTitle</div>
+                        <div class="text-muted small">Chunk: @citation.ChunkId</div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="portal-card bg-white p-4">
+            <h5 class="fw-bold">Upload document</h5>
+            <form method="post" action="/Member/Upload" enctype="multipart/form-data">
+                <input type="hidden" name="OrgId" value="@Model.OrgId" />
+                <div class="mb-2">
+                    <label class="form-label">Title</label>
+                    <input name="Title" class="form-control" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">File</label>
+                    <input type="file" name="File" class="form-control" accept=".pdf,.txt,.md" />
+                </div>
+                <button class="btn btn-outline-primary w-100">Upload</button>
+            </form>
+            <hr />
+            <h6 class="fw-bold">Documents</h6>
+            <ul class="list-group">
+                @foreach (var doc in Model.Documents)
+                {
+                    <li class="list-group-item">
+                        <div class="fw-bold">@doc.Title</div>
+                        <div class="text-muted small">Owner: @Model.OrgName</div>
+                        <div class="text-muted small">@doc.Status - @doc.UploadedAt</div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
